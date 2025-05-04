@@ -1,5 +1,26 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+    <script>
+    // التحقق من تسجيل الدخول
+    if (localStorage.getItem('technobox-admin-loggedin') !== 'true') {
+        window.location.href = 'login.html';
+    }
+    
+    // إضافة زر تسجيل الخروج في الهيدر
+    document.addEventListener('DOMContentLoaded', () => {
+        const header = document.querySelector('header nav');
+        const logoutBtn = document.createElement('a');
+        logoutBtn.href = '#';
+        logoutBtn.textContent = 'تسجيل الخروج';
+        logoutBtn.style.color = '#ff5555';
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('technobox-admin-loggedin');
+            window.location.href = 'login.html';
+        });
+        header.appendChild(logoutBtn);
+    });
+</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
