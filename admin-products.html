@@ -1,32 +1,61 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-    <script>
-    // التحقق من تسجيل الدخول
-    if (localStorage.getItem('technobox-admin-loggedin') !== 'true') {
-        window.location.href = 'login.html';
-    }
-    
-    // إضافة زر تسجيل الخروج في الهيدر
-    document.addEventListener('DOMContentLoaded', () => {
-        const header = document.querySelector('header nav');
-        const logoutBtn = document.createElement('a');
-        logoutBtn.href = '#';
-        logoutBtn.textContent = 'تسجيل الخروج';
-        logoutBtn.style.color = '#ff5555';
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('technobox-admin-loggedin');
-            window.location.href = 'login.html';
-        });
-        header.appendChild(logoutBtn);
-    });
-</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechnoBox - إدارة المنتجات</title>
     <style>
-        /* نفس أنماط الصفحة الرئيسية مع إضافات */
+        :root {
+            --primary-color: #0a192f;
+            --secondary-color: #172a45;
+            --accent-color: #64ffda;
+            --text-color: #ccd6f6;
+            --danger-color: #ff5555;
+        }
+        
+        body {
+            font-family: 'Tahoma', Arial, sans-serif;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 1rem;
+            padding: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--accent-color);
+        }
+        
+        .logout-btn {
+            color: var(--danger-color) !important;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
         
         .product-form {
             background-color: var(--secondary-color);
@@ -74,19 +103,42 @@
             margin-top: 1rem;
         }
         
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #52d1b8;
+        }
+        
         .btn-danger {
             background-color: var(--danger-color);
             color: white;
         }
         
-        .btn-primary {
-            background-color: #3a7bd5;
-            color: white;
+        .btn-danger:hover {
+            background-color: #ff3333;
         }
         
         .btn-warning {
             background-color: #ffa500;
             color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e69500;
         }
         
         .modal {
@@ -116,6 +168,25 @@
             gap: 1rem;
             margin-top: 1.5rem;
         }
+        
+        .status-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .sold-out {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .ordered {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -123,7 +194,8 @@
         <div class="logo">TechnoBox</div>
         <nav>
             <a href="index.html">الرئيسية</a>
-            <a href="products.html">المنتجات</a>
+            <a href="visitor-products.html">المنتجات</a>
+            <a href="#" class="logout-btn" id="logout-btn">تسجيل الخروج</a>
         </nav>
     </header>
     
@@ -163,7 +235,7 @@
                     <label for="payment-applepay">ابل باي</label>
                 </div>
             </div>
-            <button class="btn" id="create-product">إنشاء المنتج</button>
+            <button class="btn btn-primary" id="create-product">إنشاء المنتج</button>
         </div>
         
         <h2>المنتجات المتاحة</h2>
@@ -178,7 +250,7 @@
             <h3>تأكيد الحذف</h3>
             <p>هل أنت متأكد أنك تريد حذف هذا المنتج؟</p>
             <div class="modal-actions">
-                <button class="btn" id="confirm-cancel">إلغاء</button>
+                <button class="btn btn-primary" id="confirm-cancel">إلغاء</button>
                 <button class="btn btn-danger" id="confirm-delete">حذف</button>
             </div>
         </div>
@@ -205,13 +277,25 @@
                 <input type="number" id="edit-quantity" min="0" required>
             </div>
             <div class="modal-actions">
-                <button class="btn" id="edit-cancel">إلغاء</button>
+                <button class="btn btn-primary" id="edit-cancel">إلغاء</button>
                 <button class="btn btn-primary" id="edit-save">حفظ التغييرات</button>
             </div>
         </div>
     </div>
     
     <script>
+        // التحقق من تسجيل الدخول
+        if (localStorage.getItem('technobox-admin-loggedin') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        
+        // تسجيل الخروج
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('technobox-admin-loggedin');
+            window.location.href = 'index.html';
+        });
+        
         // تخزين المنتجات
         let products = JSON.parse(localStorage.getItem('technobox-products')) || [];
         let currentProductId = null;
@@ -227,16 +311,18 @@
                 
                 let statusBadge = '';
                 if (product.status === 'sold-out') {
-                    statusBadge = '<span style="color: #ff5555; font-weight: bold;">(نفاد الكمية)</span>';
+                    statusBadge = '<span class="status-badge sold-out">نفاد الكمية</span>';
                 } else if (product.status === 'ordered') {
-                    statusBadge = '<span style="color: #64ffda; font-weight: bold;">(تم الطلب)</span>';
+                    statusBadge = '<span class="status-badge ordered">تم الطلب</span>';
                 }
                 
                 productCard.innerHTML = `
-                    <h3>${product.name} ${statusBadge}</h3>
+                    ${statusBadge}
+                    <h3>${product.name}</h3>
                     <p>${product.description}</p>
                     <p><strong>السعر:</strong> ${product.price} ر.س</p>
                     <p><strong>الكمية المتاحة:</strong> ${product.quantity}</p>
+                    <p><strong>طرق الدفع:</strong> ${product.paymentMethods.join('، ')}</p>
                     <div class="product-actions">
                         <button class="btn btn-danger" onclick="confirmDelete('${product.id}')">حذف المنتج</button>
                         <button class="btn btn-primary" onclick="openEditModal('${product.id}')">تعديل المنتج</button>
