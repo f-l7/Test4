@@ -5,7 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechnoBox - المنتجات</title>
     <style>
-        /* نفس أنماط الصفحة الرئيسية مع إضافات */
+        :root {
+            --primary-color: #0a192f;
+            --secondary-color: #172a45;
+            --accent-color: #64ffda;
+            --text-color: #ccd6f6;
+            --danger-color: #ff5555;
+        }
+        
+        body {
+            font-family: 'Tahoma', Arial, sans-serif;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 1rem;
+            padding: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--accent-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
         
         .visitor-products {
             display: grid;
@@ -18,6 +64,15 @@
             border-radius: 8px;
             padding: 1rem;
             position: relative;
+            text-align: center;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
         }
         
         .sold-out-badge {
@@ -31,28 +86,22 @@
             font-weight: bold;
         }
         
-        .order-form {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #2c3e50;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        
-        .form-group select {
-            width: 100%;
-            padding: 0.5rem;
+        .btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
             border-radius: 4px;
-            border: 1px solid #2c3e50;
-            background-color: #1a2a3a;
-            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: #52d1b8;
         }
         
         .modal {
@@ -77,8 +126,31 @@
             text-align: center;
         }
         
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: right;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #2c3e50;
+            background-color: #1a2a3a;
+            color: var(--text-color);
+        }
+        
         .payment-links {
             margin-top: 1rem;
+            padding: 1rem;
+            background-color: rgba(10, 25, 47, 0.5);
+            border-radius: 8px;
         }
         
         .payment-links a {
@@ -98,7 +170,7 @@
         <div class="logo">TechnoBox</div>
         <nav>
             <a href="index.html">الرئيسية</a>
-            <a href="products.html">المنتجات</a>
+            <a href="visitor-products.html">المنتجات</a>
         </nav>
     </header>
     
@@ -114,17 +186,32 @@
     <div class="modal" id="order-modal">
         <div class="modal-content">
             <h3 id="order-product-name">طلب المنتج</h3>
-            <p>الرجاء اختيار طريقة الدفع:</p>
+            <img id="order-product-image" src="" alt="صورة المنتج" class="product-image">
+            <p id="order-product-price"></p>
+            
             <div class="form-group">
+                <label for="customer-name">الاسم الكامل</label>
+                <input type="text" id="customer-name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="customer-phone">رقم الجوال</label>
+                <input type="tel" id="customer-phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment-method">طريقة الدفع</label>
                 <select id="payment-method">
                     <!-- سيتم ملؤها بالخيارات عبر JavaScript -->
                 </select>
             </div>
+            
             <div class="payment-links" id="payment-links">
                 <!-- سيتم ملؤها بالروابط عبر JavaScript -->
             </div>
-            <button class="btn" id="complete-order">تمت عملية الدفع</button>
-            <button class="btn" id="cancel-order" style="margin-right: 1rem;">إلغاء</button>
+            
+            <button class="btn" id="complete-order">تأكيد الطلب</button>
+            <button class="btn" id="cancel-order" style="margin-right: 1rem; background-color: var(--danger-color);">إلغاء</button>
         </div>
     </div>
     
@@ -132,6 +219,8 @@
     <div class="modal" id="success-modal">
         <div class="modal-content">
             <h3>تم طلب المنتج بنجاح!</h3>
+            <p>تفاصيل طلبك:</p>
+            <div id="order-details"></div>
             <p>يرجى تصوير هذه الرسالة وفتح تذكرة في سيرفر الدعم الفني.</p>
             <p>شكراً لشرائك من TechnoBox!</p>
             <button class="btn" id="close-success">حسناً</button>
@@ -153,6 +242,7 @@
                     productCard.className = 'visitor-product-card';
                     productCard.innerHTML = `
                         <div class="sold-out-badge">تم نفاد الكمية</div>
+                        ${product.image ? `<img src="${product.image}" class="product-image" alt="${product.name}">` : ''}
                         <h3>${product.name}</h3>
                         <p>${product.description}</p>
                         <p><strong>السعر:</strong> ${product.price} ر.س</p>
@@ -169,13 +259,12 @@
                     
                     productCard.innerHTML = `
                         ${statusBadge}
+                        ${product.image ? `<img src="${product.image}" class="product-image" alt="${product.name}">` : ''}
                         <h3>${product.name}</h3>
                         <p>${product.description}</p>
                         <p><strong>السعر:</strong> ${product.price} ر.س</p>
                         <p><strong>الكمية المتاحة:</strong> ${product.quantity}</p>
-                        <div class="order-form">
-                            <button class="btn" onclick="openOrderModal('${product.id}')">طلب المنتج</button>
-                        </div>
+                        <button class="btn" onclick="openOrderModal('${product.id}')">طلب المنتج</button>
                     `;
                     visitorProducts.appendChild(productCard);
                 }
@@ -189,7 +278,14 @@
             currentOrderProductId = productId;
             const product = products.find(p => p.id === productId);
             
-            document.getElementById('order-product-name').textContent = `طلب ${product.name}`;
+            document.getElementById('order-product-name').textContent = product.name;
+            if (product.image) {
+                document.getElementById('order-product-image').src = product.image;
+                document.getElementById('order-product-image').style.display = 'block';
+            } else {
+                document.getElementById('order-product-image').style.display = 'none';
+            }
+            document.getElementById('order-product-price').textContent = `السعر: ${product.price} ر.س`;
             
             const paymentMethodSelect = document.getElementById('payment-method');
             paymentMethodSelect.innerHTML = '';
@@ -215,6 +311,7 @@
                 paymentLinks.innerHTML = `
                     <p>الرجاء التحويل إلى حساب راجحي:</p>
                     <p>IBAN: SA0380000000001234567890</p>
+                    <p>اسم المستلم: TechnoBox</p>
                 `;
             } else if (method === 'بايبال') {
                 paymentLinks.innerHTML = `
@@ -239,12 +336,37 @@
         
         // إكمال الطلب
         document.getElementById('complete-order').addEventListener('click', () => {
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+            
+            if (!customerName || !customerPhone) {
+                alert('الرجاء إدخال جميع المعلومات المطلوبة!');
+                return;
+            }
+            
             const index = products.findIndex(p => p.id === currentOrderProductId);
             products[index].status = 'ordered';
             localStorage.setItem('technobox-products', JSON.stringify(products));
             
+            // عرض تفاصيل الطلب
+            const product = products[index];
+            const orderDetails = `
+                <p><strong>المنتج:</strong> ${product.name}</p>
+                <p><strong>السعر:</strong> ${product.price} ر.س</p>
+                <p><strong>طريقة الدفع:</strong> ${paymentMethod}</p>
+                <p><strong>اسم العميل:</strong> ${customerName}</p>
+                <p><strong>رقم الجوال:</strong> ${customerPhone}</p>
+                <p><strong>رقم الطلب:</strong> ${Date.now().toString().slice(-6)}</p>
+            `;
+            
+            document.getElementById('order-details').innerHTML = orderDetails;
             document.getElementById('order-modal').style.display = 'none';
             document.getElementById('success-modal').style.display = 'flex';
+            
+            // إعادة تعيين النموذج
+            document.getElementById('customer-name').value = '';
+            document.getElementById('customer-phone').value = '';
             
             // إعادة تحميل الصفحة بعد ثانية لتحديث حالة المنتج
             setTimeout(() => {
