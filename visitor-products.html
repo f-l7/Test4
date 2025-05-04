@@ -1,1 +1,264 @@
-
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechnoBox - المنتجات</title>
+    <style>
+        /* نفس أنماط الصفحة الرئيسية مع إضافات */
+        
+        .visitor-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .visitor-product-card {
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+        }
+        
+        .sold-out-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background-color: var(--danger-color);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .order-form {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #2c3e50;
+            background-color: #1a2a3a;
+            color: var(--text-color);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .payment-links {
+            margin-top: 1rem;
+        }
+        
+        .payment-links a {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            margin: 0.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">TechnoBox</div>
+        <nav>
+            <a href="index.html">الرئيسية</a>
+            <a href="products.html">المنتجات</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <h1>منتجاتنا</h1>
+        
+        <div class="visitor-products" id="visitor-products">
+            <!-- سيتم ملؤها بالمنتجات عبر JavaScript -->
+        </div>
+    </div>
+    
+    <!-- نموذج طلب المنتج -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <h3 id="order-product-name">طلب المنتج</h3>
+            <p>الرجاء اختيار طريقة الدفع:</p>
+            <div class="form-group">
+                <select id="payment-method">
+                    <!-- سيتم ملؤها بالخيارات عبر JavaScript -->
+                </select>
+            </div>
+            <div class="payment-links" id="payment-links">
+                <!-- سيتم ملؤها بالروابط عبر JavaScript -->
+            </div>
+            <button class="btn" id="complete-order">تمت عملية الدفع</button>
+            <button class="btn" id="cancel-order" style="margin-right: 1rem;">إلغاء</button>
+        </div>
+    </div>
+    
+    <!-- نموذج تأكيد الطلب -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <h3>تم طلب المنتج بنجاح!</h3>
+            <p>يرجى تصوير هذه الرسالة وفتح تذكرة في سيرفر الدعم الفني.</p>
+            <p>شكراً لشرائك من TechnoBox!</p>
+            <button class="btn" id="close-success">حسناً</button>
+        </div>
+    </div>
+    
+    <script>
+        // جلب المنتجات
+        const products = JSON.parse(localStorage.getItem('technobox-products')) || [];
+        
+        // عرض المنتجات للزوار
+        function renderVisitorProducts() {
+            const visitorProducts = document.getElementById('visitor-products');
+            visitorProducts.innerHTML = '';
+            
+            products.forEach(product => {
+                if (product.status === 'sold-out') {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'visitor-product-card';
+                    productCard.innerHTML = `
+                        <div class="sold-out-badge">تم نفاد الكمية</div>
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>السعر:</strong> ${product.price} ر.س</p>
+                    `;
+                    visitorProducts.appendChild(productCard);
+                } else {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'visitor-product-card';
+                    
+                    let statusBadge = '';
+                    if (product.status === 'ordered') {
+                        statusBadge = '<div class="sold-out-badge" style="background-color: #64ffda; color: var(--primary-color);">تم الطلب</div>';
+                    }
+                    
+                    productCard.innerHTML = `
+                        ${statusBadge}
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>السعر:</strong> ${product.price} ر.س</p>
+                        <p><strong>الكمية المتاحة:</strong> ${product.quantity}</p>
+                        <div class="order-form">
+                            <button class="btn" onclick="openOrderModal('${product.id}')">طلب المنتج</button>
+                        </div>
+                    `;
+                    visitorProducts.appendChild(productCard);
+                }
+            });
+        }
+        
+        // فتح نموذج الطلب
+        let currentOrderProductId = null;
+        
+        function openOrderModal(productId) {
+            currentOrderProductId = productId;
+            const product = products.find(p => p.id === productId);
+            
+            document.getElementById('order-product-name').textContent = `طلب ${product.name}`;
+            
+            const paymentMethodSelect = document.getElementById('payment-method');
+            paymentMethodSelect.innerHTML = '';
+            
+            product.paymentMethods.forEach(method => {
+                const option = document.createElement('option');
+                option.value = method;
+                option.textContent = method;
+                paymentMethodSelect.appendChild(option);
+            });
+            
+            updatePaymentLinks(product.paymentMethods[0]);
+            
+            document.getElementById('order-modal').style.display = 'flex';
+        }
+        
+        // تحديث روابط الدفع
+        function updatePaymentLinks(method) {
+            const paymentLinks = document.getElementById('payment-links');
+            paymentLinks.innerHTML = '';
+            
+            if (method === 'راجحي') {
+                paymentLinks.innerHTML = `
+                    <p>الرجاء التحويل إلى حساب راجحي:</p>
+                    <p>IBAN: SA0380000000001234567890</p>
+                `;
+            } else if (method === 'بايبال') {
+                paymentLinks.innerHTML = `
+                    <a href="https://www.paypal.com/paypalme/technobox" target="_blank">اضغط هنا للدفع عبر بايبال</a>
+                `;
+            } else if (method === 'ابل باي') {
+                paymentLinks.innerHTML = `
+                    <a href="https://applepay.com/technobox" target="_blank">اضغط هنا للدفع عبر ابل باي</a>
+                `;
+            }
+        }
+        
+        // تغيير طريقة الدفع
+        document.getElementById('payment-method').addEventListener('change', (e) => {
+            updatePaymentLinks(e.target.value);
+        });
+        
+        // إلغاء الطلب
+        document.getElementById('cancel-order').addEventListener('click', () => {
+            document.getElementById('order-modal').style.display = 'none';
+        });
+        
+        // إكمال الطلب
+        document.getElementById('complete-order').addEventListener('click', () => {
+            const index = products.findIndex(p => p.id === currentOrderProductId);
+            products[index].status = 'ordered';
+            localStorage.setItem('technobox-products', JSON.stringify(products));
+            
+            document.getElementById('order-modal').style.display = 'none';
+            document.getElementById('success-modal').style.display = 'flex';
+            
+            // إعادة تحميل الصفحة بعد ثانية لتحديث حالة المنتج
+            setTimeout(() => {
+                renderVisitorProducts();
+            }, 1000);
+        });
+        
+        // إغلاق رسالة النجاح
+        document.getElementById('close-success').addEventListener('click', () => {
+            document.getElementById('success-modal').style.display = 'none';
+        });
+        
+        // التحميل الأولي
+        renderVisitorProducts();
+    </script>
+</body>
+</html>
