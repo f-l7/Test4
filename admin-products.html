@@ -13,6 +13,8 @@
             --accent-color: #64ffda;
             --text-color: #e6f1ff;
             --danger-color: #ff5555;
+            --blue-color: #2563eb;
+            --dark-blue: #1d4ed8;
         }
         
         body {
@@ -126,6 +128,42 @@
             margin-top: 1.5rem;
         }
         
+        /* تصميم زر الإضافة الجديد */
+        .btn-add-product {
+            background-color: var(--blue-color);
+            color: white;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+            margin: 20px auto;
+            width: fit-content;
+        }
+        
+        .btn-add-product:hover {
+            background-color: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-add-product:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-add-product svg {
+            width: 20px;
+            height: 20px;
+        }
+        
         .btn {
             display: inline-block;
             padding: 0.7rem 1.5rem;
@@ -207,35 +245,6 @@
             text-align: center;
             padding: 2rem;
         }
-
-        /* تصميم زر الإضافة الجديد */
-        #create-product {
-            padding: 0.8rem 2rem;
-            font-size: 1.1rem;
-            margin-top: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(100, 255, 218, 0.3);
-            width: fit-content;
-            margin-right: auto;
-            margin-left: auto;
-        }
-
-        #create-product:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(100, 255, 218, 0.4);
-        }
-
-        #create-product svg {
-            transition: transform 0.3s ease;
-        }
-
-        #create-product:hover svg {
-            transform: rotate(90deg);
-        }
     </style>
 </head>
 <body>
@@ -289,12 +298,12 @@
                     <label for="payment-applepay">ابل باي</label>
                 </div>
             </div>
-            <button class="btn btn-primary" id="create-product">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="btn-add-product" id="create-product">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                إضافة المنتج
+                إضافة منتج جديد
             </button>
         </div>
         
@@ -353,53 +362,48 @@
             const quantity = document.getElementById('product-quantity').value;
             const imageInput = document.getElementById('product-image');
             
-            const paymentMethods = [];
-            if (document.getElementById('payment-rajhi').checked) paymentMethods.push('راجحي');
-            if (document.getElementById('payment-paypal').checked) paymentMethods.push('بايبال');
-            if (document.getElementById('payment-applepay').checked) paymentMethods.push('ابل باي');
-            
-            if (name && description && price && quantity) {
-                try {
-                    const productData = {
-                        name,
-                        description,
-                        price: Number(price),
-                        quantity: Number(quantity),
-                        paymentMethods,
-                        status: 'available',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-
-                    // إذا تم تحميل صورة
-                    if (imageInput.files.length > 0) {
-                        const file = imageInput.files[0];
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            productData.image = e.target.result;
-                            addProductToFirestore(productData);
-                        }
-                        reader.readAsDataURL(file);
-                    } else {
-                        await addProductToFirestore(productData);
-                    }
-                } catch (error) {
-                    alert('حدث خطأ: ' + error.message);
-                }
-            } else {
+            // التحقق من الحقول المطلوبة
+            if (!name || !description || !price || !quantity) {
                 alert('الرجاء ملء جميع الحقول المطلوبة!');
+                return;
             }
-        });
 
-        async function addProductToFirestore(productData) {
+            // إعداد بيانات المنتج
+            const productData = {
+                name: name,
+                description: description,
+                price: parseFloat(price),
+                quantity: parseInt(quantity),
+                status: 'available',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // إضافة طرق الدفع
+            productData.paymentMethods = [];
+            if (document.getElementById('payment-rajhi').checked) productData.paymentMethods.push('راجحي');
+            if (document.getElementById('payment-paypal').checked) productData.paymentMethods.push('بايبال');
+            if (document.getElementById('payment-applepay').checked) productData.paymentMethods.push('ابل باي');
+
             try {
+                // إضافة المنتج إلى Firebase
                 await db.collection("products").add(productData);
-                alert('تم إضافة المنتج بنجاح!');
-                resetProductForm();
+                alert('تمت إضافة المنتج بنجاح!');
+                
+                // إعادة تعيين النموذج
+                document.getElementById('product-name').value = '';
+                document.getElementById('product-description').value = '';
+                document.getElementById('product-price').value = '';
+                document.getElementById('product-quantity').value = '';
+                document.getElementById('product-image').value = '';
+                document.getElementById('image-preview').style.display = 'none';
+                
+                // إعادة تحميل قائمة المنتجات
                 loadProducts();
             } catch (error) {
-                alert('حدث خطأ في إضافة المنتج: ' + error.message);
+                console.error('Error adding product: ', error);
+                alert('حدث خطأ أثناء إضافة المنتج: ' + error.message);
             }
-        }
+        });
 
         // تحميل المنتجات
         async function loadProducts() {
@@ -484,19 +488,6 @@
             } catch (error) {
                 alert('حدث خطأ: ' + error.message);
             }
-        }
-
-        // إعادة تعيين النموذج
-        function resetProductForm() {
-            document.getElementById('product-name').value = '';
-            document.getElementById('product-description').value = '';
-            document.getElementById('product-price').value = '';
-            document.getElementById('product-quantity').value = '';
-            document.getElementById('product-image').value = '';
-            document.getElementById('image-preview').style.display = 'none';
-            document.getElementById('payment-rajhi').checked = true;
-            document.getElementById('payment-paypal').checked = true;
-            document.getElementById('payment-applepay').checked = true;
         }
 
         // تحميل المنتجات عند فتح الصفحة
