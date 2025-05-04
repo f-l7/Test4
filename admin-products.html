@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechnoBox - إدارة المنتجات</title>
+    <title>TechnoBox - لوحة التحكم</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary-color: #0a192f;
             --secondary-color: #172a45;
             --accent-color: #64ffda;
-            --text-color: #ccd6f6;
+            --text-color: #e6f1ff;
             --danger-color: #ff5555;
         }
         
@@ -27,10 +29,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: var(--accent-color);
         }
@@ -38,8 +41,8 @@
         nav a {
             color: var(--text-color);
             text-decoration: none;
-            margin-left: 1rem;
-            padding: 0.5rem;
+            margin-left: 1.5rem;
+            padding: 0.5rem 1rem;
             transition: all 0.3s;
         }
         
@@ -54,64 +57,85 @@
         .container {
             max-width: 1200px;
             margin: 2rem auto;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
         }
         
         .product-form {
             background-color: var(--secondary-color);
-            padding: 1.5rem;
-            border-radius: 8px;
+            padding: 2rem;
+            border-radius: 12px;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
         
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+            font-weight: bold;
+            color: var(--accent-color);
         }
         
-        .form-group input, 
-        .form-group textarea, 
+        .form-group input,
+        .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #2c3e50;
-            background-color: #1a2a3a;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            background-color: rgba(10, 25, 47, 0.5);
             color: var(--text-color);
+            font-size: 1rem;
+        }
+        
+        .image-upload {
+            margin-bottom: 1.5rem;
+        }
+        
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 1rem;
+            display: none;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 255, 218, 0.3);
         }
         
         .products-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
+            margin-top: 2rem;
         }
         
         .product-card {
             background-color: var(--secondary-color);
-            border-radius: 8px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.5rem;
             position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(100, 255, 218, 0.1);
         }
         
         .product-actions {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
         
         .btn {
             display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
             text-decoration: none;
             font-weight: bold;
             transition: all 0.3s;
             border: none;
             cursor: pointer;
+            font-size: 1rem;
         }
         
         .btn-primary {
@@ -119,17 +143,9 @@
             color: var(--primary-color);
         }
         
-        .btn-primary:hover {
-            background-color: #52d1b8;
-        }
-        
         .btn-danger {
             background-color: var(--danger-color);
             color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #ff3333;
         }
         
         .btn-warning {
@@ -137,45 +153,19 @@
             color: white;
         }
         
-        .btn-warning:hover {
-            background-color: #e69500;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: var(--secondary-color);
-            padding: 2rem;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        
         .status-badge {
             position: absolute;
-            top: 1rem;
-            left: 1rem;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
             font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .available {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
         }
         
         .sold-out {
@@ -184,8 +174,20 @@
         }
         
         .ordered {
-            background-color: var(--accent-color);
-            color: var(--primary-color);
+            background-color: #3a7bd5;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--accent-color);
+        }
+        
+        .error {
+            color: var(--danger-color);
+            text-align: center;
+            padding: 2rem;
         }
     </style>
 </head>
@@ -194,16 +196,16 @@
         <div class="logo">TechnoBox</div>
         <nav>
             <a href="index.html">الرئيسية</a>
-            <a href="visitor-products.html">المنتجات</a>
+            <a href="visitor-products.html">عرض المتجر</a>
             <a href="#" class="logout-btn" id="logout-btn">تسجيل الخروج</a>
         </nav>
     </header>
     
     <div class="container">
-        <h1>إدارة المنتجات</h1>
+        <h1 style="color: var(--accent-color);">لوحة تحكم المسؤول</h1>
         
         <div class="product-form">
-            <h2>إنشاء منتج جديد</h2>
+            <h2>إضافة منتج جديد</h2>
             <div class="form-group">
                 <label for="product-name">اسم المنتج</label>
                 <input type="text" id="product-name" required>
@@ -217,8 +219,13 @@
                 <input type="number" id="product-price" min="0" required>
             </div>
             <div class="form-group">
-                <label for="product-quantity">كمية المنتج</label>
+                <label for="product-quantity">الكمية المتاحة</label>
                 <input type="number" id="product-quantity" min="0" required>
+            </div>
+            <div class="form-group image-upload">
+                <label for="product-image">صورة المنتج (اختياري)</label>
+                <input type="file" id="product-image" accept="image/*">
+                <img id="image-preview" class="image-preview" alt="معاينة الصورة">
             </div>
             <div class="form-group">
                 <label>طرق الدفع المتاحة</label>
@@ -235,113 +242,63 @@
                     <label for="payment-applepay">ابل باي</label>
                 </div>
             </div>
-            <button class="btn btn-primary" id="create-product">إنشاء المنتج</button>
+            <button class="btn btn-primary" id="create-product">إضافة المنتج</button>
         </div>
         
-        <h2>المنتجات المتاحة</h2>
+        <h2 style="color: var(--accent-color); margin-top: 2rem;">المنتجات الحالية</h2>
         <div class="products-list" id="products-list">
-            <!-- سيتم ملؤها بالمنتجات عبر JavaScript -->
+            <p class="loading">جاري تحميل المنتجات...</p>
         </div>
     </div>
-    
-    <!-- نموذج تأكيد الحذف -->
-    <div class="modal" id="confirm-modal">
-        <div class="modal-content">
-            <h3>تأكيد الحذف</h3>
-            <p>هل أنت متأكد أنك تريد حذف هذا المنتج؟</p>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="confirm-cancel">إلغاء</button>
-                <button class="btn btn-danger" id="confirm-delete">حذف</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- نموذج تعديل المنتج -->
-    <div class="modal" id="edit-modal">
-        <div class="modal-content">
-            <h3>تعديل المنتج</h3>
-            <div class="form-group">
-                <label for="edit-name">اسم المنتج</label>
-                <input type="text" id="edit-name" required>
-            </div>
-            <div class="form-group">
-                <label for="edit-description">وصف المنتج</label>
-                <textarea id="edit-description" rows="3" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="edit-price">سعر المنتج (ر.س)</label>
-                <input type="number" id="edit-price" min="0" required>
-            </div>
-            <div class="form-group">
-                <label for="edit-quantity">كمية المنتج</label>
-                <input type="number" id="edit-quantity" min="0" required>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="edit-cancel">إلغاء</button>
-                <button class="btn btn-primary" id="edit-save">حفظ التغييرات</button>
-            </div>
-        </div>
-    </div>
-    
+
     <script>
+        // تهيئة Firebase - استبدل هذه القيم بمعلومات مشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            authDomain: "technobox-xxxxx.firebaseapp.com",
+            projectId: "technobox-xxxxx",
+            storageBucket: "technobox-xxxxx.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:xxxxxxxxxxxxxxxx"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // التحقق من تسجيل الدخول
         if (localStorage.getItem('technobox-admin-loggedin') !== 'true') {
             window.location.href = 'login.html';
         }
-        
+
         // تسجيل الخروج
         document.getElementById('logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('technobox-admin-loggedin');
             window.location.href = 'index.html';
         });
-        
-        // تخزين المنتجات
-        let products = JSON.parse(localStorage.getItem('technobox-products')) || [];
-        let currentProductId = null;
-        
-        // عرض المنتجات
-        function renderProducts() {
-            const productsList = document.getElementById('products-list');
-            productsList.innerHTML = '';
-            
-            products.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                
-                let statusBadge = '';
-                if (product.status === 'sold-out') {
-                    statusBadge = '<span class="status-badge sold-out">نفاد الكمية</span>';
-                } else if (product.status === 'ordered') {
-                    statusBadge = '<span class="status-badge ordered">تم الطلب</span>';
+
+        // معاينة الصورة
+        document.getElementById('product-image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('image-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
                 }
-                
-                productCard.innerHTML = `
-                    ${statusBadge}
-                    <h3>${product.name}</h3>
-                    <p>${product.description}</p>
-                    <p><strong>السعر:</strong> ${product.price} ر.س</p>
-                    <p><strong>الكمية المتاحة:</strong> ${product.quantity}</p>
-                    <p><strong>طرق الدفع:</strong> ${product.paymentMethods.join('، ')}</p>
-                    <div class="product-actions">
-                        <button class="btn btn-danger" onclick="confirmDelete('${product.id}')">حذف المنتج</button>
-                        <button class="btn btn-primary" onclick="openEditModal('${product.id}')">تعديل المنتج</button>
-                        ${product.status === 'sold-out' ? 
-                            `<button class="btn btn-warning" onclick="restockProduct('${product.id}')">إعادة التوفير</button>` : 
-                            `<button class="btn btn-warning" onclick="markAsSoldOut('${product.id}')">نفاد الكمية</button>`}
-                    </div>
-                `;
-                
-                productsList.appendChild(productCard);
-            });
-        }
-        
+                reader.readAsDataURL(file);
+            }
+        });
+
         // إنشاء منتج جديد
-        document.getElementById('create-product').addEventListener('click', () => {
+        document.getElementById('create-product').addEventListener('click', async () => {
             const name = document.getElementById('product-name').value;
             const description = document.getElementById('product-description').value;
             const price = document.getElementById('product-price').value;
             const quantity = document.getElementById('product-quantity').value;
+            const imageInput = document.getElementById('product-image');
             
             const paymentMethods = [];
             if (document.getElementById('payment-rajhi').checked) paymentMethods.push('راجحي');
@@ -349,110 +306,148 @@
             if (document.getElementById('payment-applepay').checked) paymentMethods.push('ابل باي');
             
             if (name && description && price && quantity) {
-                const newProduct = {
-                    id: Date.now().toString(),
-                    name,
-                    description,
-                    price,
-                    quantity,
-                    paymentMethods,
-                    status: 'available'
-                };
-                
-                products.push(newProduct);
-                localStorage.setItem('technobox-products', JSON.stringify(products));
-                renderProducts();
-                
-                // إعادة تعيين النموذج
-                document.getElementById('product-name').value = '';
-                document.getElementById('product-description').value = '';
-                document.getElementById('product-price').value = '';
-                document.getElementById('product-quantity').value = '';
-                
-                alert('تم إنشاء المنتج بنجاح!');
+                try {
+                    const productData = {
+                        name,
+                        description,
+                        price: Number(price),
+                        quantity: Number(quantity),
+                        paymentMethods,
+                        status: 'available',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // إذا تم تحميل صورة
+                    if (imageInput.files.length > 0) {
+                        const file = imageInput.files[0];
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            productData.image = e.target.result;
+                            addProductToFirestore(productData);
+                        }
+                        reader.readAsDataURL(file);
+                    } else {
+                        await addProductToFirestore(productData);
+                    }
+                } catch (error) {
+                    alert('حدث خطأ: ' + error.message);
+                }
             } else {
                 alert('الرجاء ملء جميع الحقول المطلوبة!');
             }
         });
-        
-        // تأكيد الحذف
-        function confirmDelete(productId) {
-            currentProductId = productId;
-            document.getElementById('confirm-modal').style.display = 'flex';
-        }
-        
-        document.getElementById('confirm-cancel').addEventListener('click', () => {
-            document.getElementById('confirm-modal').style.display = 'none';
-        });
-        
-        document.getElementById('confirm-delete').addEventListener('click', () => {
-            products = products.filter(p => p.id !== currentProductId);
-            localStorage.setItem('technobox-products', JSON.stringify(products));
-            renderProducts();
-            document.getElementById('confirm-modal').style.display = 'none';
-        });
-        
-        // تعديل المنتج
-        function openEditModal(productId) {
-            currentProductId = productId;
-            const product = products.find(p => p.id === productId);
-            
-            document.getElementById('edit-name').value = product.name;
-            document.getElementById('edit-description').value = product.description;
-            document.getElementById('edit-price').value = product.price;
-            document.getElementById('edit-quantity').value = product.quantity;
-            
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
-        
-        document.getElementById('edit-cancel').addEventListener('click', () => {
-            document.getElementById('edit-modal').style.display = 'none';
-        });
-        
-        document.getElementById('edit-save').addEventListener('click', () => {
-            const name = document.getElementById('edit-name').value;
-            const description = document.getElementById('edit-description').value;
-            const price = document.getElementById('edit-price').value;
-            const quantity = document.getElementById('edit-quantity').value;
-            
-            if (name && description && price && quantity) {
-                const index = products.findIndex(p => p.id === currentProductId);
-                products[index] = {
-                    ...products[index],
-                    name,
-                    description,
-                    price,
-                    quantity
-                };
-                
-                localStorage.setItem('technobox-products', JSON.stringify(products));
-                renderProducts();
-                document.getElementById('edit-modal').style.display = 'none';
-                
-                alert('تم تحديث المنتج بنجاح!');
-            } else {
-                alert('الرجاء ملء جميع الحقول المطلوبة!');
+
+        async function addProductToFirestore(productData) {
+            try {
+                await db.collection("products").add(productData);
+                alert('تم إضافة المنتج بنجاح!');
+                resetProductForm();
+                loadProducts();
+            } catch (error) {
+                alert('حدث خطأ في إضافة المنتج: ' + error.message);
             }
-        });
-        
+        }
+
+        // تحميل المنتجات
+        async function loadProducts() {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '<p class="loading">جاري تحميل المنتجات...</p>';
+            
+            try {
+                const snapshot = await db.collection("products")
+                    .orderBy("createdAt", "desc")
+                    .get();
+                
+                productsList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    productsList.innerHTML = '<p class="error">لا توجد منتجات متاحة</p>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const product = doc.data();
+                    const statusClass = product.status === 'available' ? 'available' : 
+                                        product.status === 'sold-out' ? 'sold-out' : 'ordered';
+                    const statusText = product.status === 'available' ? 'متاح' : 
+                                      product.status === 'sold-out' ? 'نفدت الكمية' : 'تم الطلب';
+                    
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.innerHTML = `
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>السعر:</strong> ${product.price} ر.س</p>
+                        <p><strong>الكمية:</strong> ${product.quantity}</p>
+                        ${product.image ? `<img src="${product.image}" class="image-preview" style="display:block; margin-top:1rem;">` : ''}
+                        <div class="product-actions">
+                            <button class="btn btn-danger" onclick="deleteProduct('${doc.id}')">حذف</button>
+                            <button class="btn btn-primary" onclick="editProduct('${doc.id}')">تعديل</button>
+                            ${product.status === 'available' ? 
+                                `<button class="btn btn-warning" onclick="markAsSoldOut('${doc.id}')">نفاد الكمية</button>` : 
+                                `<button class="btn btn-warning" onclick="restockProduct('${doc.id}')">إعادة التوفير</button>`}
+                        </div>
+                    `;
+                    productsList.appendChild(productCard);
+                });
+            } catch (error) {
+                productsList.innerHTML = '<p class="error">حدث خطأ في تحميل المنتجات</p>';
+            }
+        }
+
+        // حذف منتج
+        async function deleteProduct(productId) {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                try {
+                    await db.collection("products").doc(productId).delete();
+                    alert('تم حذف المنتج بنجاح');
+                    loadProducts();
+                } catch (error) {
+                    alert('حدث خطأ أثناء الحذف: ' + error.message);
+                }
+            }
+        }
+
         // نفاد الكمية
-        function markAsSoldOut(productId) {
-            const index = products.findIndex(p => p.id === productId);
-            products[index].status = 'sold-out';
-            localStorage.setItem('technobox-products', JSON.stringify(products));
-            renderProducts();
+        async function markAsSoldOut(productId) {
+            try {
+                await db.collection("products").doc(productId).update({
+                    status: 'sold-out'
+                });
+                loadProducts();
+            } catch (error) {
+                alert('حدث خطأ: ' + error.message);
+            }
         }
-        
+
         // إعادة التوفير
-        function restockProduct(productId) {
-            const index = products.findIndex(p => p.id === productId);
-            products[index].status = 'available';
-            localStorage.setItem('technobox-products', JSON.stringify(products));
-            renderProducts();
+        async function restockProduct(productId) {
+            try {
+                await db.collection("products").doc(productId).update({
+                    status: 'available'
+                });
+                loadProducts();
+            } catch (error) {
+                alert('حدث خطأ: ' + error.message);
+            }
         }
-        
-        // التحميل الأولي
-        renderProducts();
+
+        // إعادة تعيين النموذج
+        function resetProductForm() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-description').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-quantity').value = '';
+            document.getElementById('product-image').value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('payment-rajhi').checked = true;
+            document.getElementById('payment-paypal').checked = true;
+            document.getElementById('payment-applepay').checked = true;
+        }
+
+        // تحميل المنتجات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', loadProducts);
     </script>
 </body>
 </html>
