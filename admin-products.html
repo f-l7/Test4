@@ -128,7 +128,6 @@
             margin-top: 1.5rem;
         }
         
-        /* تصميم زر الإضافة الجديد */
         .btn-add-product {
             background-color: var(--blue-color);
             color: white;
@@ -272,7 +271,7 @@
             </div>
             <div class="form-group">
                 <label for="product-price">سعر المنتج (ر.س)</label>
-                <input type="number" id="product-price" min="0" required>
+                <input type="number" id="product-price" min="0" step="0.01" required>
             </div>
             <div class="form-group">
                 <label for="product-quantity">الكمية المتاحة</label>
@@ -314,7 +313,7 @@
     </div>
 
     <script>
-        // تهيئة Firebase - استبدل هذه القيم بمعلومات مشروعك
+        // 1. تهيئة Firebase - استبدل هذه القيم بمعلومات مشروعك
         const firebaseConfig = {
             apiKey: "AIzaSyAxxxxxxxxxxxxxxxxxxxxxxxxxxx",
             authDomain: "technobox-xxxxx.firebaseapp.com",
@@ -324,23 +323,23 @@
             appId: "1:1234567890:web:xxxxxxxxxxxxxxxx"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        // 2. Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // التحقق من تسجيل الدخول
+        // 3. التحقق من تسجيل الدخول
         if (localStorage.getItem('technobox-admin-loggedin') !== 'true') {
             window.location.href = 'login.html';
         }
 
-        // تسجيل الخروج
+        // 4. تسجيل الخروج
         document.getElementById('logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('technobox-admin-loggedin');
             window.location.href = 'index.html';
         });
 
-        // معاينة الصورة
+        // 5. معاينة الصورة
         document.getElementById('product-image').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -354,17 +353,29 @@
             }
         });
 
-        // إنشاء منتج جديد
-        document.getElementById('create-product').addEventListener('click', async () => {
-            const name = document.getElementById('product-name').value;
-            const description = document.getElementById('product-description').value;
-            const price = document.getElementById('product-price').value;
-            const quantity = document.getElementById('product-quantity').value;
-            const imageInput = document.getElementById('product-image');
+        // 6. دالة إنشاء منتج جديد
+        document.getElementById('create-product').addEventListener('click', async function() {
+            console.log('بدء عملية إضافة منتج جديد');
+            
+            const name = document.getElementById('product-name').value.trim();
+            const description = document.getElementById('product-description').value.trim();
+            const price = document.getElementById('product-price').value.trim();
+            const quantity = document.getElementById('product-quantity').value.trim();
             
             // التحقق من الحقول المطلوبة
             if (!name || !description || !price || !quantity) {
                 alert('الرجاء ملء جميع الحقول المطلوبة!');
+                return;
+            }
+
+            // التحقق من صحة السعر والكمية
+            if (isNaN(price) {
+                alert('الرجاء إدخال سعر صحيح!');
+                return;
+            }
+
+            if (isNaN(quantity) {
+                alert('الرجاء إدخال كمية صحيحة!');
                 return;
             }
 
@@ -375,20 +386,33 @@
                 price: parseFloat(price),
                 quantity: parseInt(quantity),
                 status: 'available',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                paymentMethods: []
             };
 
-            // إضافة طرق الدفع
-            productData.paymentMethods = [];
-            if (document.getElementById('payment-rajhi').checked) productData.paymentMethods.push('راجحي');
-            if (document.getElementById('payment-paypal').checked) productData.paymentMethods.push('بايبال');
-            if (document.getElementById('payment-applepay').checked) productData.paymentMethods.push('ابل باي');
+            // إضافة طرق الدفع المختارة
+            if (document.getElementById('payment-rajhi').checked) {
+                productData.paymentMethods.push('راجحي');
+            }
+            if (document.getElementById('payment-paypal').checked) {
+                productData.paymentMethods.push('بايبال');
+            }
+            if (document.getElementById('payment-applepay').checked) {
+                productData.paymentMethods.push('ابل باي');
+            }
 
             try {
-                // إضافة المنتج إلى Firebase
-                await db.collection("products").add(productData);
-                alert('تمت إضافة المنتج بنجاح!');
+                console.log('جاري إضافة المنتج:', productData);
                 
+                // تعطيل الزر أثناء الإضافة
+                const btn = document.getElementById('create-product');
+                btn.disabled = true;
+                btn.innerHTML = 'جاري الإضافة...';
+
+                // إضافة المنتج إلى Firestore
+                const docRef = await db.collection("products").add(productData);
+                console.log('تمت إضافة المنتج بنجاح مع ID:', docRef.id);
+
                 // إعادة تعيين النموذج
                 document.getElementById('product-name').value = '';
                 document.getElementById('product-description').value = '';
@@ -398,15 +422,29 @@
                 document.getElementById('image-preview').style.display = 'none';
                 
                 // إعادة تحميل قائمة المنتجات
-                loadProducts();
+                await loadProducts();
+                
+                alert('تمت إضافة المنتج بنجاح!');
             } catch (error) {
-                console.error('Error adding product: ', error);
-                alert('حدث خطأ أثناء إضافة المنتج: ' + error.message);
+                console.error('حدث خطأ أثناء إضافة المنتج:', error);
+                alert('حدث خطأ: ' + error.message);
+            } finally {
+                // إعادة تعيين الزر
+                const btn = document.getElementById('create-product');
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    إضافة منتج جديد
+                `;
             }
         });
 
-        // تحميل المنتجات
+        // 7. دالة تحميل المنتجات
         async function loadProducts() {
+            console.log('جاري تحميل المنتجات...');
             const productsList = document.getElementById('products-list');
             productsList.innerHTML = '<p class="loading">جاري تحميل المنتجات...</p>';
             
@@ -435,7 +473,7 @@
                         <span class="status-badge ${statusClass}">${statusText}</span>
                         <h3>${product.name}</h3>
                         <p>${product.description}</p>
-                        <p><strong>السعر:</strong> ${product.price} ر.س</p>
+                        <p><strong>السعر:</strong> ${product.price.toFixed(2)} ر.س</p>
                         <p><strong>الكمية:</strong> ${product.quantity}</p>
                         ${product.image ? `<img src="${product.image}" class="image-preview" style="display:block; margin-top:1rem;">` : ''}
                         <div class="product-actions">
@@ -448,50 +486,65 @@
                     `;
                     productsList.appendChild(productCard);
                 });
+                console.log('تم تحميل المنتجات بنجاح');
             } catch (error) {
+                console.error('حدث خطأ في تحميل المنتجات:', error);
                 productsList.innerHTML = '<p class="error">حدث خطأ في تحميل المنتجات</p>';
             }
         }
 
-        // حذف منتج
+        // 8. دالة حذف المنتج
         async function deleteProduct(productId) {
             if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
                 try {
                     await db.collection("products").doc(productId).delete();
-                    alert('تم حذف المنتج بنجاح');
-                    loadProducts();
+                    console.log('تم حذف المنتج بنجاح');
+                    await loadProducts();
                 } catch (error) {
+                    console.error('حدث خطأ أثناء الحذف:', error);
                     alert('حدث خطأ أثناء الحذف: ' + error.message);
                 }
             }
         }
 
-        // نفاد الكمية
+        // 9. دالة نفاد الكمية
         async function markAsSoldOut(productId) {
             try {
                 await db.collection("products").doc(productId).update({
                     status: 'sold-out'
                 });
-                loadProducts();
+                console.log('تم تحديث حالة المنتج إلى نفاد الكمية');
+                await loadProducts();
             } catch (error) {
+                console.error('حدث خطأ في تحديث حالة المنتج:', error);
                 alert('حدث خطأ: ' + error.message);
             }
         }
 
-        // إعادة التوفير
+        // 10. دالة إعادة التوفير
         async function restockProduct(productId) {
             try {
                 await db.collection("products").doc(productId).update({
                     status: 'available'
                 });
-                loadProducts();
+                console.log('تم إعادة توفير المنتج');
+                await loadProducts();
             } catch (error) {
+                console.error('حدث خطأ في إعادة التوفير:', error);
                 alert('حدث خطأ: ' + error.message);
             }
         }
 
-        // تحميل المنتجات عند فتح الصفحة
-        document.addEventListener('DOMContentLoaded', loadProducts);
+        // 11. تحميل المنتجات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('تم تحميل الصفحة، جاري تحميل المنتجات...');
+            loadProducts();
+        });
+
+        // 12. جعل الدوال متاحة عالمياً للاستخدام في الأحداث
+        window.deleteProduct = deleteProduct;
+        window.markAsSoldOut = markAsSoldOut;
+        window.restockProduct = restockProduct;
     </script>
 </body>
 </html>
